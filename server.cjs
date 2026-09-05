@@ -68,10 +68,9 @@ const server = http.createServer(async (request, response) => {
         const account = JSON.parse(body)
         if (!account.username || !account.password) throw new Error('Missing account fields')
         const accounts = await readAccounts()
-        if (accounts.some((item) => item.username === account.username)) {
-          response.writeHead(409); response.end('Username already exists'); return
-        }
-        accounts.push({ username: account.username, password: account.password })
+        const existingIndex = accounts.findIndex((item) => item.username === account.username)
+        if (existingIndex >= 0) accounts[existingIndex] = { ...accounts[existingIndex], ...account }
+        else accounts.push({ username: account.username, password: account.password, avatarPath: account.avatarPath })
         await writeAccounts(accounts)
         response.writeHead(201, { 'Content-Type': 'application/json' })
         response.end(JSON.stringify({ username: account.username, password: account.password }))
