@@ -31,10 +31,13 @@ function App() {
   const [view, setView] = useState<'messages' | 'admin'>('messages')
   const [newChat, setNewChat] = useState(false)
   useEffect(() => {
-    fetch(`${apiBase}/api/messages`).then((response) => response.ok ? response.json() : Promise.reject()).then((stored: StoredMessage[]) => {
+    const refreshMessages = () => fetch(`${apiBase}/api/messages`).then((response) => response.ok ? response.json() : Promise.reject()).then((stored: StoredMessage[]) => {
       setMessages(stored)
       localStorage.setItem(messagesKey, JSON.stringify(stored))
     }).catch(() => undefined)
+    refreshMessages()
+    const timer = window.setInterval(refreshMessages, 1500)
+    return () => window.clearInterval(timer)
   }, [])
   const saveAccounts = (next: Account[]) => { setAccounts(next); localStorage.setItem(accountsKey, JSON.stringify(next)) }
   const saveMessages = (next: StoredMessage[]) => { const message = next.at(-1); setMessages(next); localStorage.setItem(messagesKey, JSON.stringify(next)); if (message) fetch(`${apiBase}/api/messages`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(message) }).catch(() => undefined) }
