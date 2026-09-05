@@ -10,6 +10,16 @@ npm run dev:all
 
 Open the Vite URL shown in the terminal. The API runs on port `8787` and the Vite app proxies `/api/messages` to it.
 
+## Cloudflare
+
+Keep `npm run dev:all` running, then open a second terminal and run:
+
+```powershell
+npm run tunnel
+```
+
+The command uses `cloudflared-windows-amd64.exe` from your Downloads folder and prints a temporary public URL for the app. The URL changes when the quick tunnel is restarted. The repository stores the launcher command, not the temporary URL.
+
 ## Message format
 
 Every entry in `messages.json` includes `from` and `sent-to`, plus `sender` and `receiver`:
