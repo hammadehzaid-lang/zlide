@@ -16,7 +16,7 @@ async function writeMessages(messages) {
 }
 
 async function readAccounts() {
-  try { return JSON.parse(await fs.readFile(accountsPath, 'utf8')) } catch { return [{ username: 'zaid', password: 'zaid' }] }
+  try { return JSON.parse(await fs.readFile(accountsPath, 'utf8')) } catch { return [{ username: 'giga', password: 'zaid' }] }
 }
 
 async function writeAccounts(accounts) {
