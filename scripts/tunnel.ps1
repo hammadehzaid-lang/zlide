@@ -6,4 +6,4 @@ if (-not (Test-Path $cloudflared)) {
 }
 
 Write-Host 'Starting Cloudflare quick tunnel for http://127.0.0.1:5173'
-& $cloudflared tunnel --url http://127.0.0.1:5173
+& $cloudflared tunnel --protocol http2 --url http://127.0.0.1:5173
