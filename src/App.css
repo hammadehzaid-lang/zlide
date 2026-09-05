@@ -1,6 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap');
 
 :root { --ink: #242321; --muted: #89867f; --line: #e5e1d9; --paper: #fbfaf7; --cream: #f4f1eb; --green: #4d8c62; --orange: #ee765d; }
+.profile-avatar-wrap { position: relative; display: inline-flex; }.profile-viewer { display: none; position: absolute; z-index: 20; top: 38px; left: 0; min-width: 150px; padding: 10px; border: 1px solid var(--line); border-top: 3px solid #4d8c62; border-radius: 7px; background: white; box-shadow: 0 10px 25px #24232125; }.profile-viewer strong, .profile-viewer small { display: block; }.profile-viewer strong { color: #3c3934; font-size: 11px; }.profile-viewer small { color: #9a958d; font-size: 9px; margin-top: 3px; }.profile-avatar-wrap:hover .profile-viewer { display: block; }.banner-color { width: 24px; height: 20px; padding: 0; border: 0; margin-top: 8px; cursor: pointer; }.mobile-back { display: none; border: 0; background: transparent; color: #568061; font-size: 11px; padding: 0 0 8px; }
+@media (max-width: 700px) { .mobile-back { display: block; } }
 .login-page { min-height: 100vh; display: grid; grid-template-columns: 1.06fr .94fr; background: var(--paper); }
 .login-art { position: relative; overflow: hidden; background: #e2ece4; display: grid; place-items: center; }
 .art-grid { position: absolute; inset: 0; opacity: .37; background-image: linear-gradient(#bdd2c1 1px, transparent 1px), linear-gradient(90deg, #bdd2c1 1px, transparent 1px); background-size: 42px 42px; transform: rotate(-12deg) scale(1.35); }

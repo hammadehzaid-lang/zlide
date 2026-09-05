@@ -30,8 +30,10 @@ const server = http.createServer(async (request, response) => {
   if (request.method === 'OPTIONS') { response.writeHead(204); response.end(); return }
   if (request.url.startsWith('/uploads/')) {
     try {
-      const uploadName = path.basename(request.url.slice('/uploads/'.length))
-      const image = await fs.readFile(path.join(uploadsDir, uploadName))
+      const relativeUpload = request.url.slice('/uploads/'.length).split('?')[0]
+      const uploadName = path.basename(relativeUpload)
+      const uploadFolder = path.basename(path.dirname(relativeUpload))
+      const image = await fs.readFile(path.join(uploadsDir, uploadFolder === 'pfps' || uploadFolder === 'banners' ? uploadFolder : '', uploadName))
       const contentType = uploadName.endsWith('.jpg') || uploadName.endsWith('.jpeg') ? 'image/jpeg' : uploadName.endsWith('.gif') ? 'image/gif' : 'image/png'
       response.writeHead(200, { 'Content-Type': contentType, 'Cache-Control': 'no-cache' })
       response.end(image)
@@ -43,14 +45,16 @@ const server = http.createServer(async (request, response) => {
     request.on('data', (chunk) => { body += chunk })
     request.on('end', async () => {
       try {
-        const { id, sender, receiver, fileName, fileType, dataUrl } = JSON.parse(body)
+        const { id, sender, receiver: _receiver, fileName, fileType, dataUrl, uploadType } = JSON.parse(body)
         const encoded = dataUrl.split(',')[1]
         const extension = fileType === 'image/jpeg' ? '.jpg' : fileType === 'image/gif' ? '.gif' : path.extname(String(fileName || '')).toLowerCase() || '.png'
-        const filename = `${String(id).replace(/[^a-zA-Z0-9_-]/g, '')}-${String(sender).replace(/[^a-zA-Z0-9_-]/g, '')}-to-${String(receiver).replace(/[^a-zA-Z0-9_-]/g, '')}${extension}`
-        await fs.mkdir(uploadsDir, { recursive: true })
-        await fs.writeFile(path.join(uploadsDir, filename), Buffer.from(encoded, 'base64'))
+        const folder = uploadType === 'pfp' ? 'pfps' : uploadType === 'banner' ? 'banners' : ''
+        const filename = `${String(id).replace(/[^a-zA-Z0-9_-]/g, '')}-${String(sender).replace(/[^a-zA-Z0-9_-]/g, '')}${extension}`
+        const destination = path.join(uploadsDir, folder, filename)
+        await fs.mkdir(path.dirname(destination), { recursive: true })
+        await fs.writeFile(destination, Buffer.from(encoded, 'base64'))
         response.writeHead(201, { 'Content-Type': 'application/json' })
-        response.end(JSON.stringify({ path: `/uploads/${filename}` }))
+        response.end(JSON.stringify({ path: `/uploads/${folder ? `${folder}/` : ''}${filename}` }))
       } catch { response.writeHead(400); response.end('Invalid image') }
     })
     return
@@ -66,11 +70,11 @@ const server = http.createServer(async (request, response) => {
     request.on('end', async () => {
       try {
         const account = JSON.parse(body)
-        if (!account.username || !account.password) throw new Error('Missing account fields')
+        if (!account.username) throw new Error('Missing account fields')
         const accounts = await readAccounts()
         const existingIndex = accounts.findIndex((item) => item.username === account.username)
         if (existingIndex >= 0) accounts[existingIndex] = { ...accounts[existingIndex], ...account }
-        else accounts.push({ username: account.username, password: account.password, avatarPath: account.avatarPath })
+        else { if (!account.password) throw new Error('Missing password'); accounts.push({ username: account.username, password: account.password, avatarPath: account.avatarPath, bannerPath: account.bannerPath, bannerColor: account.bannerColor }) }
         await writeAccounts(accounts)
         response.writeHead(201, { 'Content-Type': 'application/json' })
         response.end(JSON.stringify({ username: account.username, password: account.password }))
