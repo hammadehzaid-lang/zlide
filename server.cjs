@@ -3,6 +3,7 @@ const fs = require('node:fs/promises')
 const path = require('node:path')
 
 const filePath = path.join(__dirname, 'messages.json')
+const accountsPath = path.join(__dirname, 'accounts.json')
 const uploadsDir = path.join(__dirname, 'uploads')
 const port = 8787
 
@@ -12,6 +13,14 @@ async function readMessages() {
 
 async function writeMessages(messages) {
   await fs.writeFile(filePath, `${JSON.stringify(messages, null, 2)}\n`, 'utf8')
+}
+
+async function readAccounts() {
+  try { return JSON.parse(await fs.readFile(accountsPath, 'utf8')) } catch { return [{ username: 'zaid', password: 'zaid' }] }
+}
+
+async function writeAccounts(accounts) {
+  await fs.writeFile(accountsPath, `${JSON.stringify(accounts, null, 2)}\n`, 'utf8')
 }
 
 const server = http.createServer(async (request, response) => {
@@ -43,6 +52,30 @@ const server = http.createServer(async (request, response) => {
         response.writeHead(201, { 'Content-Type': 'application/json' })
         response.end(JSON.stringify({ path: `/uploads/${filename}` }))
       } catch { response.writeHead(400); response.end('Invalid image') }
+    })
+    return
+  }
+  if (request.url === '/api/accounts' && request.method === 'GET') {
+    response.setHeader('Content-Type', 'application/json')
+    response.end(JSON.stringify(await readAccounts()))
+    return
+  }
+  if (request.url === '/api/accounts' && request.method === 'POST') {
+    let body = ''
+    request.on('data', (chunk) => { body += chunk })
+    request.on('end', async () => {
+      try {
+        const account = JSON.parse(body)
+        if (!account.username || !account.password) throw new Error('Missing account fields')
+        const accounts = await readAccounts()
+        if (accounts.some((item) => item.username === account.username)) {
+          response.writeHead(409); response.end('Username already exists'); return
+        }
+        accounts.push({ username: account.username, password: account.password })
+        await writeAccounts(accounts)
+        response.writeHead(201, { 'Content-Type': 'application/json' })
+        response.end(JSON.stringify({ username: account.username, password: account.password }))
+      } catch { response.writeHead(400); response.end('Invalid account') }
     })
     return
   }

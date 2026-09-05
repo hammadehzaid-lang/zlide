@@ -7,7 +7,7 @@ type Account = { username: string; password: string }
 type StoredMessage = { id: string; sender: string; receiver: string; from: string; 'sent-to': string; text?: string; file?: string; imagePath?: string; createdAt: string }
 const accountsKey = 'zlide.accounts'
 const messagesKey = 'zlide.messages'
-const starterAccounts: Account[] = [{ username: 'zaid', password: 'zaid' }, { username: 'alex', password: 'alex' }, { username: 'maya', password: 'maya' }]
+const starterAccounts: Account[] = [{ username: 'zaid', password: 'zaid' }]
 const apiBase = import.meta.env.PROD ? 'https://prevent-corporations-facilities-caring.trycloudflare.com' : ''
 const read = <T,>(key: string, fallback: T): T => { try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)) } catch { return fallback } }
 const readMessages = (): StoredMessage[] => read<StoredMessage[]>(messagesKey, []).map((message) => ({ ...message, from: message.from || message.sender, 'sent-to': message['sent-to'] || message.receiver }))
@@ -31,6 +31,18 @@ function App() {
   const [view, setView] = useState<'messages' | 'admin'>('messages')
   const [newChat, setNewChat] = useState(false)
   useEffect(() => {
+    const refreshAccounts = () => fetch(`${apiBase}/api/accounts`).then((response) => response.ok ? response.json() : Promise.reject()).then(async (remote: Account[]) => {
+      const local = read<Account[]>(accountsKey, starterAccounts)
+      const merged = [...remote, ...local.filter((account) => !remote.some((item) => item.username === account.username))]
+      setAccounts(merged)
+      localStorage.setItem(accountsKey, JSON.stringify(merged))
+      await Promise.all(merged.filter((account) => !remote.some((item) => item.username === account.username)).map((account) => fetch(`${apiBase}/api/accounts`, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(account) })))
+    }).catch(() => undefined)
+    refreshAccounts()
+    const timer = window.setInterval(refreshAccounts, 2000)
+    return () => window.clearInterval(timer)
+  }, [])
+  useEffect(() => {
     const refreshMessages = () => fetch(`${apiBase}/api/messages`).then((response) => response.ok ? response.json() : Promise.reject()).then((stored: StoredMessage[]) => {
       setMessages(stored)
       localStorage.setItem(messagesKey, JSON.stringify(stored))
@@ -39,7 +51,7 @@ function App() {
     const timer = window.setInterval(refreshMessages, 1500)
     return () => window.clearInterval(timer)
   }, [])
-  const saveAccounts = (next: Account[]) => { setAccounts(next); localStorage.setItem(accountsKey, JSON.stringify(next)) }
+  const saveAccounts = (next: Account[]) => { const account = next.at(-1); setAccounts(next); localStorage.setItem(accountsKey, JSON.stringify(next)); if (account) fetch(`${apiBase}/api/accounts`, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(account) }).catch(() => undefined) }
   const saveMessages = (next: StoredMessage[]) => { const message = next.at(-1); setMessages(next); localStorage.setItem(messagesKey, JSON.stringify(next)); if (message) fetch(`${apiBase}/api/messages`, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(message) }).catch(() => undefined) }
   useEffect(() => { const refreshMessages = () => setMessages(readMessages()); window.addEventListener('storage', refreshMessages); const timer = window.setInterval(refreshMessages, 1000); return () => { window.removeEventListener('storage', refreshMessages); window.clearInterval(timer) } }, [])
   const sendMessage = async () => { if (!currentUser || !recipient || (!draft.trim() && !file)) return; const id = crypto.randomUUID(); let imagePath: string | undefined; if (file?.image) { const response = await fetch(`${apiBase}/api/uploads`, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ id, sender: currentUser, receiver: recipient, fileName: file.name, fileType: file.image.type, dataUrl: await imageAsDataUrl(file.image) }) }); if (!response.ok) return; imagePath = (await response.json()).path } saveMessages([...messages, { id, sender: currentUser, receiver: recipient, from: currentUser, 'sent-to': recipient, text: draft.trim() || undefined, file: file?.name, imagePath, createdAt: new Date().toISOString() }]); setDraft(''); setFile(null) }
