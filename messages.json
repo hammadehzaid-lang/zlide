@@ -1,0 +1,39 @@
+[
+  {
+    "id": "7c4a1f4e-6044-491b-8fd5-7127927c8b23",
+    "sender": "zaid",
+    "receiver": "test",
+    "from": "zaid",
+    "sent-to": "test",
+    "text": "hi",
+    "createdAt": "2026-09-04T14:04:26.531Z"
+  },
+  {
+    "id": "4c7107a3-a2d0-4ecd-8ef0-47e68a265f13",
+    "sender": "zaid",
+    "receiver": "test",
+    "from": "zaid",
+    "sent-to": "test",
+    "text": "bismillah",
+    "createdAt": "2026-09-04T14:04:45.053Z"
+  },
+  {
+    "id": "e9ce60ab-31b2-4a7f-8a1d-3b9f823ddfd7",
+    "sender": "zaid",
+    "receiver": "test",
+    "from": "zaid",
+    "sent-to": "test",
+    "file": "DSC00088.JPG",
+    "createdAt": "2026-09-04T14:04:54.379Z"
+  },
+  {
+    "id": "3d54dc2c-4c8e-4eb1-960d-53374cefa2a7",
+    "sender": "test",
+    "receiver": "zaid",
+    "from": "test",
+    "sent-to": "zaid",
+    "file": "DSC00089.JPG",
+    "imagePath": "/uploads/3d54dc2c-4c8e-4eb1-960d-53374cefa2a7-test-to-zaid.jpg",
+    "createdAt": "2026-09-04T14:17:19.497Z"
+  }
+]
